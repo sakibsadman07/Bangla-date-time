@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>আজকের তারিখ ও সময় · Today's Date & Time</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#eef3ef; --surface:#ffffff; --ink:#14301f; --muted:#5b7466; --accent:#0b6b3a; --line:#cfdcd3;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1a14; --surface:#16251c; --ink:#e6f1ea; --muted:#8fa89a; --accent:#5fd391; --line:#27402f; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1a14; --surface:#16251c; --ink:#e6f1ea; --muted:#8fa89a; --accent:#5fd391; --line:#27402f; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans Bengali","Hind Siliguri","Segoe UI",system-ui,sans-serif;
+  min-height:100%; padding:20px 16px 32px;
+  display:flex; justify-content:center;
+}
+main{width:100%; max-width:560px; display:grid; gap:16px; align-content:start}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px}
+.lang{font-size:.85rem; color:var(--muted); margin:0 0 6px}
+.big{font-size:clamp(1.9rem,8vw,2.6rem); font-weight:700; line-height:1.25; margin:0; color:var(--accent)}
+.mid{font-size:1.15rem; margin:4px 0 0}
+.row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.cell{border-top:1px solid var(--line); padding-top:12px; margin-top:12px}
+.cell:first-child{margin-top:0}
+.clock{font-variant-numeric:tabular-nums; font-size:clamp(1.7rem,7.5vw,2.3rem); font-weight:700; margin:0}
+.sub{font-size:.95rem; color:var(--muted); margin:2px 0 0}
+@media (max-width:420px){.row{grid-template-columns:1fr}}
+
+/* animated background */
+.bg{position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none}
+.bg i{position:absolute; border-radius:50%; filter:blur(70px); opacity:.4; will-change:transform}
+.bg i:nth-child(1){width:55vmax; height:55vmax; background:var(--accent); left:-15vmax; top:-15vmax; animation:d1 22s ease-in-out infinite alternate}
+.bg i:nth-child(2){width:40vmax; height:40vmax; background:#d32f2f; right:-12vmax; top:25vh; opacity:.22; animation:d2 28s ease-in-out infinite alternate}
+.bg i:nth-child(3){width:45vmax; height:45vmax; background:var(--accent); left:25vw; bottom:-22vmax; opacity:.28; animation:d3 25s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(30vw,22vh) scale(1.2)}}
+@keyframes d2{to{transform:translate(-30vw,-18vh) scale(.85)}}
+@keyframes d3{to{transform:translate(-28vw,-24vh) scale(1.15)}}
+.panel{background:color-mix(in srgb,var(--surface) 86%,transparent); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px)}
+@media (prefers-reduced-motion: reduce){.bg i{animation:none}}
+
+/* calendar */
+.calhead{display:flex; align-items:center; justify-content:space-between; gap:8px}
+.calhead button{border:1px solid var(--line); background:transparent; color:var(--ink); border-radius:10px; padding:6px 12px; font:inherit; cursor:pointer}
+.calhead button:focus-visible,.day:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.caltitle{text-align:center; flex:1}
+.caltitle b{display:block; font-size:1.15rem; color:var(--accent)}
+.caltitle span{display:block; font-size:.85rem; color:var(--muted)}
+.calgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:14px}
+.wdh{text-align:center; font-size:.8rem; color:var(--muted); line-height:1.2; padding-bottom:4px}
+.wdh.fri{color:#e0463e}
+.day{aspect-ratio:1/1.05; border:1px solid transparent; border-radius:10px; background:transparent; color:var(--ink); font:inherit; font-weight:600; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.15; cursor:pointer; padding:0}
+.day small{font-size:.65rem; font-weight:400; color:var(--muted)}
+.day.fri{color:#e0463e}
+.day.today{background:var(--accent); color:var(--surface)}
+.day.today small{color:var(--surface)}
+.day.sel{border-color:var(--accent)}
+.day.empty{visibility:hidden; cursor:default}
+.caldetail{margin-top:14px; border-top:1px solid var(--line); padding-top:12px}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
+<main>
+  <section class="panel" aria-label="বার / Day">
+    <p class="lang">বার · Day</p>
+    <p class="big" id="dayBn">–</p>
+    <p class="mid" id="dayEn">–</p>
+  </section>
+
+  <section class="panel" aria-label="তারিখ / Date">
+    <div class="cell">
+      <p class="lang">বাংলায় · In Bangla</p>
+      <p class="big" id="dateBn">–</p>
+    </div>
+    <div class="cell">
+      <p class="lang">ইংরেজিতে · In English</p>
+      <p class="big" id="dateEn">–</p>
+    </div>
+    <div class="cell">
+      <p class="lang">সংখ্যায় · Numeric</p>
+      <p class="mid" id="dateNum">–</p>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="সময় / Time">
+    <div class="cell">
+      <p class="lang">১২ ঘণ্টা · 12-hour</p>
+      <p class="clock" id="t12Bn">–</p>
+      <p class="sub" id="t12En">–</p>
+    </div>
+    <div class="cell">
+      <p class="lang">২৪ ঘণ্টা · 24-hour</p>
+      <p class="clock" id="t24Bn">–</p>
+      <p class="sub" id="t24En">–</p>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="ক্যালেন্ডার / Calendar">
+    <div class="calhead">
+      <button id="cPrev" aria-label="Previous month">‹</button>
+      <div class="caltitle"><b id="cTitle">–</b><span id="cTitle2">–</span></div>
+      <button id="cNext" aria-label="Next month">›</button>
+    </div>
+    <div class="calgrid" id="cGrid"></div>
+    <div class="caldetail">
+      <p class="mid" id="cDetBn" style="margin:0">–</p>
+      <p class="sub" id="cDetEn">–</p>
+    </div>
+    <p style="margin:12px 0 0"><button id="cToday" style="border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:10px;padding:6px 12px;font:inherit;cursor:pointer">আজ · Today</button></p>
+  </section>
+</main>
+
+<script>
+const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+const toBn = s => String(s).replace(/\d/g, d => bnDigits[d]);
+const pad = n => String(n).padStart(2,'0');
+
+const daysEn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const daysBn = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+const monthsEn = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const monthsBn = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+
+function periodBn(h){
+  if (h < 4) return 'রাত';
+  if (h < 6) return 'ভোর';
+  if (h < 12) return 'সকাল';
+  if (h < 15) return 'দুপুর';
+  if (h < 18) return 'বিকাল';
+  if (h < 20) return 'সন্ধ্যা';
+  return 'রাত';
+}
+
+function set(id, text){ document.getElementById(id).textContent = text; }
+
+function tick(){
+  const n = new Date();
+  const d = n.getDate(), m = n.getMonth(), y = n.getFullYear();
+  const H = n.getHours(), M = n.getMinutes(), S = n.getSeconds();
+
+  set('dayBn', daysBn[n.getDay()]);
+  set('dayEn', daysEn[n.getDay()]);
+
+  set('dateBn', toBn(d) + ' ' + monthsBn[m] + ', ' + toBn(y));
+  set('dateEn', monthsEn[m] + ' ' + d + ', ' + y);
+  set('dateNum', toBn(pad(d) + '/' + pad(m+1) + '/' + y) + '  ·  ' + pad(d) + '/' + pad(m+1) + '/' + y);
+
+  const h12 = H % 12 === 0 ? 12 : H % 12;
+  const ampm = H < 12 ? 'AM' : 'PM';
+  const t12 = pad(h12) + ':' + pad(M) + ':' + pad(S);
+  set('t12Bn', periodBn(H) + ' ' + toBn(t12));
+  set('t12En', t12 + ' ' + ampm);
+
+  const t24 = pad(H) + ':' + pad(M) + ':' + pad(S);
+  set('t24Bn', toBn(t24));
+  set('t24En', t24);
+}
+
+/* ===== Calendar ===== */
+const bmBn=['বৈশাখ','জ্যৈষ্ঠ','আষাঢ়','শ্রাবণ','ভাদ্র','আশ্বিন','কার্তিক','অগ্রহায়ণ','পৌষ','মাঘ','ফাল্গুন','চৈত্র'];
+const bmEn=['Boishakh','Joishtho','Asharh','Srabon','Bhadro','Ashwin','Kartik','Agrahayan','Poush','Magh','Falgun','Chaitra'];
+const wdShBn=['রবি','সোম','মঙ্গল','বুধ','বৃহ','শুক্র','শনি'];
+const wdShEn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const isLeap=y=>(y%4===0&&y%100!==0)||y%400===0;
+// Bangladesh revised Bangla calendar (new year: 14 April)
+function bangla(n){
+  const y=n.getFullYear(), cur=Date.UTC(y,n.getMonth(),n.getDate());
+  let sy=cur<Date.UTC(y,3,14)?y-1:y;
+  let off=Math.round((cur-Date.UTC(sy,3,14))/864e5);
+  const lens=[31,31,31,31,31,30,30,30,30,30,isLeap(sy+1)?31:30,30];
+  let i=0; while(off>=lens[i]){off-=lens[i];i++}
+  return {y:sy-593,m:i,d:off+1};
+}
+const now0=new Date();
+let cy=now0.getFullYear(), cm=now0.getMonth(), sel=new Date(now0.getFullYear(),now0.getMonth(),now0.getDate()), todayKey='';
+const same=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+
+function renderCal(){
+  const today=new Date(); todayKey=today.toDateString();
+  const first=new Date(cy,cm,1), last=new Date(cy,cm+1,0), dim=last.getDate(), start=first.getDay();
+  const b1=bangla(first), b2=bangla(last);
+  let bT=bmBn[b1.m]+(b1.y!==b2.y?' '+toBn(b1.y):'')+(b1.m!==b2.m?' – '+bmBn[b2.m]:'')+' '+toBn(b2.y)+' বঙ্গাব্দ';
+  let eT=bmEn[b1.m]+(b1.y!==b2.y?' '+b1.y:'')+(b1.m!==b2.m?' – '+bmEn[b2.m]:'')+' '+b2.y+' BS';
+  set('cTitle', monthsBn[cm]+' '+toBn(cy)+' · '+monthsEn[cm]+' '+cy);
+  set('cTitle2', bT+' · '+eT);
+  let h='';
+  for(let i=0;i<7;i++) h+='<div class="wdh'+(i===5?' fri':'')+'">'+wdShBn[i]+'<br>'+wdShEn[i]+'</div>';
+  for(let i=0;i<start;i++) h+='<button class="day empty" tabindex="-1" aria-hidden="true"></button>';
+  for(let d=1;d<=dim;d++){
+    const dt=new Date(cy,cm,d), bd=bangla(dt);
+    const cls='day'+(dt.getDay()===5?' fri':'')+(same(dt,today)?' today':'')+(same(dt,sel)?' sel':'');
+    h+='<button class="'+cls+'" data-d="'+d+'" title="'+toBn(bd.d)+' '+bmBn[bd.m]+' '+toBn(bd.y)+'">'+toBn(d)+'<small>'+d+'</small></button>';
+  }
+  document.getElementById('cGrid').innerHTML=h;
+  const bd=bangla(sel), w=sel.getDay(), d=sel.getDate(), m=sel.getMonth(), y=sel.getFullYear();
+  set('cDetBn', daysBn[w]+', '+toBn(d)+' '+monthsBn[m]+' '+toBn(y)+' · '+toBn(bd.d)+' '+bmBn[bd.m]+' '+toBn(bd.y));
+  set('cDetEn', daysEn[w]+', '+monthsEn[m]+' '+d+', '+y+' · '+bd.d+' '+bmEn[bd.m]+' '+bd.y+' BS');
+}
+function shift(n){cm+=n; if(cm<0){cm=11;cy--} if(cm>11){cm=0;cy++} renderCal()}
+document.getElementById('cPrev').onclick=()=>shift(-1);
+document.getElementById('cNext').onclick=()=>shift(1);
+document.getElementById('cToday').onclick=()=>{const t=new Date();cy=t.getFullYear();cm=t.getMonth();sel=new Date(cy,cm,t.getDate());renderCal()};
+document.getElementById('cGrid').onclick=e=>{const b=e.target.closest('.day[data-d]'); if(!b)return; sel=new Date(cy,cm,+b.dataset.d); renderCal()};
+renderCal();
+setInterval(()=>{if(new Date().toDateString()!==todayKey)renderCal()},30000);
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
