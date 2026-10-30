@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>আজকের তারিখ ও সময় · Today's Date & Time</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a5c36">
+<meta name="description" content="Bangla and English date, day, 12/24-hour clock and calendar with the Bangla (Bongabdo) date.">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="তারিখ ও সময়">
 <style>
 :root{
   box-sizing:border-box;
@@ -219,6 +227,10 @@ setInterval(()=>{if(new Date().toDateString()!==todayKey)renderCal()},30000);
 
 tick();
 setInterval(tick, 1000);
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
